@@ -1,0 +1,23 @@
+- name: fetch yum repository
+  get_url: url=http://mirror.pnl.gov/epel/6/i386/epel-release-6-8.noarch.rpm dest=/tmp
+
+- name: configure the epel repository
+  yum: name=/tmp/epel-release-6-8.noarch.rpm
+
+- name: setup the basho proserv repo
+  copy: src=basho_proserv.repo dest=/etc/yum.repos.d/
+
+- name: install collectd
+  yum: name=$item state=present
+  with_items:
+  - collectd
+  - collectd-rrdtool
+
+- name: copy base configuration file
+  template: src=etc_colletcd.conf dest=/etc/collectd.conf
+  notify: restart collectd
+
+- name: configure iptables
+  template: src=iptables.j2 dest=/etc/sysconfig/iptables.collectd_server owner=root group=root
+  notify:
+  - lokkit
